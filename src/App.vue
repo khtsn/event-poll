@@ -1,33 +1,25 @@
 <template>
   <div id="app">
-    <select-username
-      v-if="!usernameAlreadySelected"
-      @input="onUsernameSelection"
-    />
-    <chat v-else />
+    <button @click="vote(0)">Vote A</button>
+    <button @click="vote(1)">Vote B</button>
+    <button @click="vote(2)">Vote C</button>
+    <button @click="vote(3)">Vote D</button>
+    <button @click="vote(4)">Vote E</button>
   </div>
 </template>
 
 <script>
-import SelectUsername from "./components/SelectUsername";
-import Chat from "./components/Chat";
 import socket from "./socket";
 export default {
   name: "App",
-  components: {
-    Chat,
-    SelectUsername,
-  },
   data() {
     return {
       usernameAlreadySelected: false,
     };
   },
   methods: {
-    onUsernameSelection(username) {
-      this.usernameAlreadySelected = true;
-      socket.auth = { username };
-      socket.connect();
+    vote(value) {
+      socket.emit('poll:vote', value);
     },
   },
   created() {
