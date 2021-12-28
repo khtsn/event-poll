@@ -6,6 +6,7 @@ const server = http.createServer(app);
 const {
   createClient
 } = require('redis');
+require('dotenv').config()
 
 const {
   Server
@@ -28,7 +29,7 @@ io.on('connection', async (socket) => {
 });
 
 app.post('/refresh', async (req, res) => {
-  if (!req.body || req.body.key != 'diacare12282021') {
+  if (!req.body || req.body.key != process.env.KEY) {
     return res.status(404).send('404 not found');
   }
   io.emit('poll:refresh');
