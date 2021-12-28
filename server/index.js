@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(express.json()) // for parsing application/json
 const http = require('http');
 const server = http.createServer(app);
 const {
@@ -26,7 +27,10 @@ io.on('connection', async (socket) => {
   })
 });
 
-app.get('/refresh', async (req, res) => {
+app.post('/refresh', async (req, res) => {
+  if (!req.body || req.body.key != 'diacare12282021') {
+    return res.status(404).send('404 not found');
+  }
   io.emit('poll:refresh');
   res.send('OK');
 });
