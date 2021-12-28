@@ -18,16 +18,16 @@ const io = new Server(server, {
 io.on('connection', async (socket) => {
   socket.on('poll:vote', async (value) => {
     await vote(value);
-    io.emit('refresh');
+    io.emit('poll:refresh');
   });
+
+  socket.on('poll:data', async (fn) => {
+    fn(await getPoll());
+  })
 });
 
 app.get('/refresh', async (req, res) => {
-  let data = JSON.parse(await getPoll());
-  for (const i in data.choices) {
-    data.choices[i].votes = parseInt(await get('poll:vote:' + i) || 0);
-  }
-  io.emit('poll:update', data);
+  io.emit('poll:refresh');
   res.send('OK');
 });
 
@@ -41,7 +41,10 @@ async function vote(value) {
 async function getPoll() {
   const client = createClient();
   await client.connect();
-  const data = await client.get('poll:data');
+  let data = JSON.parse(await client.get('poll:data'));
+  for (const i in data.choices) {
+    data.choices[i].votes = parseInt(await get('poll:vote:' + i) || 0);
+  }
   await client.quit();
   return data;
 }

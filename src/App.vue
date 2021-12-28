@@ -5,6 +5,7 @@
     <button @click="vote(2)">Vote C</button>
     <button @click="vote(3)">Vote D</button>
     <button @click="vote(4)">Vote E</button>
+    <button @click="refresh">Refresh</button>
   </div>
 </template>
 
@@ -14,23 +15,28 @@ export default {
   name: "App",
   data() {
     return {
-      usernameAlreadySelected: false,
+      poll: {},
     };
   },
   methods: {
     vote(value) {
       socket.emit('poll:vote', value);
     },
+    refresh() {
+      socket.emit('poll:data', function(data) {
+        console.log(data);
+      });
+    }
   },
   created() {
-    socket.on("connect_error", (err) => {
-      if (err.message === "invalid username") {
-        this.usernameAlreadySelected = false;
-      }
-    });
+    socket.on('poll:refresh', function() {
+      socket.emit('poll:data', function(data) {
+        console.log(data);
+      });
+    })
   },
   destroyed() {
-    socket.off("connect_error");
+    socket.off();
   },
 };
 </script>
