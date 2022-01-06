@@ -13,7 +13,7 @@ const {
 } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: ["https://admin.socket.io"],
   }
 });
 const { instrument } = require("@socket.io/admin-ui");
