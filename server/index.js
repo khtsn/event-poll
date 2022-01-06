@@ -36,6 +36,11 @@ app.post('/refresh', async (req, res) => {
   res.send('OK');
 });
 
+app.get('/total', (req, res) => {
+  var srvSockets = io.sockets.sockets;
+  res.send(Object.keys(srvSockets).length);
+})
+
 async function vote(value) {
   const client = createClient();
   await client.connect();
