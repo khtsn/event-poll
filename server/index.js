@@ -38,7 +38,7 @@ app.post('/refresh', async (req, res) => {
 
 app.get('/total', (req, res) => {
   var srvSockets = io.sockets.sockets;
-  res.send(Object.keys(srvSockets).length);
+  res.send('Total connections: ' + Object.keys(srvSockets).length);
 })
 
 async function vote(value) {
