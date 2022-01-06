@@ -16,6 +16,11 @@ const io = new Server(server, {
     origin: '*',
   }
 });
+const { instrument } = require("@socket.io/admin-ui");
+
+instrument(io, {
+  auth: false
+});
 
 io.on('connection', async (socket) => {
   socket.on('poll:vote', async (value) => {
@@ -25,10 +30,6 @@ io.on('connection', async (socket) => {
 
   socket.on('poll:data', async (fn) => {
     fn(await getPoll());
-  })
-
-  socket.on('connections', () => {
-    socket.emit(Object.keys(io.sockets.sockets).length);
   })
 });
 
