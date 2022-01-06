@@ -26,6 +26,10 @@ io.on('connection', async (socket) => {
   socket.on('poll:data', async (fn) => {
     fn(await getPoll());
   })
+
+  socket.on('connections', () => {
+    socket.emit(Object.keys(io.sockets.sockets).length);
+  })
 });
 
 app.post('/refresh', async (req, res) => {
@@ -35,11 +39,6 @@ app.post('/refresh', async (req, res) => {
   io.emit('poll:refresh');
   res.send('OK');
 });
-
-app.get('/total', (req, res) => {
-  var srvSockets = io.sockets.sockets;
-  res.send('Total connections: ' + Object.keys(srvSockets).length);
-})
 
 async function vote(value) {
   const client = createClient();
