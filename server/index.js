@@ -23,37 +23,49 @@ instrument(io, {
 });
 
 io.on('connection', async (socket) => {
+  socket.on('poll', id => {
+    socket.join(id);
+    socket.channelId = id
+    console.log("an user joined", id);
+  })
+
   socket.on('poll:vote', async (value) => {
-    await vote(value);
-    io.emit('poll:refresh');
+    let channel = socket.channelId || 0;
+    await vote(channel, value);
+    io.to(channel).emit('poll:refresh');
+    console.log("poll:vote",channel, value);
   });
 
   socket.on('poll:data', async (fn) => {
-    fn(await getPoll());
+    let channel = socket.channelId || 0;
+    fn(await getPoll(channel));
+    console.log("poll:data",channel);
   })
 });
 
-app.post('/refresh', async (req, res) => {
+app.post('/:channel/refresh', async (req, res) => {
   if (!req.body || req.body.key != process.env.KEY) {
     return res.status(404).send('404 not found');
   }
-  io.emit('poll:refresh');
+  io.to(parseInt(req.params.channel)).emit('poll:refresh');
   res.send('OK');
+  console.log("poll:refresh", parseInt(req.params.channel));
 });
 
-async function vote(value) {
+async function vote(channel, value) {
   const client = createClient();
   await client.connect();
-  await client.incr('poll:vote:' + value);
+  await client.incr(`poll:${channel}:vote:${value}`);
   await client.quit();
 }
 
-async function getPoll() {
+async function getPoll(channel) {
+  if (!channel || channel <= 0) return {};
   const client = createClient();
   await client.connect();
-  let data = JSON.parse(await client.get('poll:data'));
+  let data = JSON.parse(await client.get(`poll:${channel}:data`));
   for (const i in data.choices) {
-    data.choices[i].votes = parseInt(await get('poll:vote:' + i) || 0);
+    data.choices[i].votes = parseInt(await get(`poll:${channel}:vote:${i}`) || 0);
   }
   await client.quit();
   return data;
