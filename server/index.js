@@ -29,7 +29,7 @@ io.on('connection', async (socket) => {
   socket.on('poll', id => {
     socket.join(id);
     socket.channelId = id
-    console.log("an user joined", id);
+    console.log("join", id, socket.id);
   })
 
   socket.on('poll:vote', async (value) => {
@@ -45,9 +45,13 @@ io.on('connection', async (socket) => {
     console.log("poll:data",channel);
   })
 
-  socket.on('config', async() => {
-    return clientConfig;
+  socket.on('config', async () => {
+    io.emit('config:data', clientConfig);
   })
+
+  socket.on("disconnect", () => {
+    console.log("left", socket.id);
+  });
 });
 
 app.post('/:channel/refresh', async (req, res) => {
@@ -66,7 +70,7 @@ app.post('/toggle/:key', async (req, res) => {
   }
   if (req.params.key == 'cme') {
     clientConfig.cme = !clientConfig.cme;
-    io.emit('config');
+    io.emit('config:data', clientConfig);
   }
   res.send('OK');
   console.log("toggle:key", req.params.key);
