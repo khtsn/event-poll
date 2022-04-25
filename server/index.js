@@ -17,6 +17,9 @@ const io = new Server(server, {
   }
 });
 const { instrument } = require("@socket.io/admin-ui");
+let clientConfig = {
+  "cme": false,
+}
 
 instrument(io, {
   auth: false
@@ -41,6 +44,10 @@ io.on('connection', async (socket) => {
     fn(await getPoll(channel));
     console.log("poll:data",channel);
   })
+
+  socket.on('config', async() => {
+    return clientConfig;
+  })
 });
 
 app.post('/:channel/refresh', async (req, res) => {
@@ -50,6 +57,19 @@ app.post('/:channel/refresh', async (req, res) => {
   io.to(parseInt(req.params.channel)).emit('poll:refresh');
   res.send('OK');
   console.log("poll:refresh", parseInt(req.params.channel));
+});
+
+
+app.post('/toggle/:key', async (req, res) => {
+  if (!req.body || req.body.key != process.env.KEY) {
+    return res.status(404).send('404 not found');
+  }
+  if (req.params.key == 'cme') {
+    clientConfig.cme = !clientConfig.cme;
+    io.emit('config');
+  }
+  res.send('OK');
+  console.log("toggle:key", req.params.key);
 });
 
 async function vote(channel, value) {
