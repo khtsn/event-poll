@@ -18,7 +18,8 @@ const io = new Server(server, {
 });
 const { instrument } = require("@socket.io/admin-ui");
 let clientConfig = {
-  "cme": false,
+  "cme1": false,
+  "cme2": false,
 }
 
 instrument(io, {
@@ -58,22 +59,31 @@ app.post('/:channel/refresh', async (req, res) => {
   if (!req.body || req.body.key != process.env.KEY) {
     return res.status(404).send('404 not found');
   }
+  if (req.body.action == 'clearVotes') {
+    io.to(parseInt(req.params.channel)).emit('poll:clear');
+    console.log("poll:refresh:clearVotes", parseInt(req.params.channel));
+  }
   io.to(parseInt(req.params.channel)).emit('poll:refresh');
   res.send('OK');
   console.log("poll:refresh", parseInt(req.params.channel));
 });
 
 
-app.post('/toggle/:key', async (req, res) => {
+app.post('/toggle/:key/:channel', async (req, res) => {
   if (!req.body || req.body.key != process.env.KEY) {
     return res.status(404).send('404 not found');
   }
-  if (req.params.key == 'cme') {
-    clientConfig.cme = !clientConfig.cme;
-    io.emit('config:data', clientConfig);
+  let channel = parseInt(req.params.channel)
+  if (req.params.key == 'cme' && channel === 1) {
+    clientConfig.cme1 = !clientConfig.cme1;
+    io.to(channel).emit('config:data', clientConfig);
+  }
+  if (req.params.key == 'cme' && channel === 2) {
+    clientConfig.cme2 = !clientConfig.cme2;
+    io.to(channel).emit('config:data', clientConfig);
   }
   res.send('OK');
-  console.log("toggle:key", req.params.key);
+  console.log("toggle:key:channel", req.params.key, channel);
 });
 
 async function vote(channel, value) {
@@ -88,8 +98,10 @@ async function getPoll(channel) {
   const client = createClient();
   await client.connect();
   let data = JSON.parse(await client.get(`poll:${channel}:data`));
-  for (const i in data.choices) {
-    data.choices[i].votes = parseInt(await get(`poll:${channel}:vote:${i}`) || 0);
+  if (data.choices && Array.isArray(data.choices)) {
+    for (const i in data.choices) {
+      data.choices[i].votes = parseInt(await get(`poll:${channel}:vote:${i}`) || 0);
+    }
   }
   await client.quit();
   return data;
