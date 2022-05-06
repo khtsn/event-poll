@@ -30,20 +30,20 @@ io.on('connection', async (socket) => {
   socket.on('poll', id => {
     socket.join(id);
     socket.channelId = id
-    console.log("join", id, socket.id);
+    // console.log("join", id, socket.id);
   })
 
   socket.on('poll:vote', async (value) => {
     let channel = socket.channelId || 0;
     await vote(channel, value);
     io.to(channel).emit('poll:refresh');
-    console.log("poll:vote",channel, value);
+    // console.log("poll:vote",channel, value);
   });
 
   socket.on('poll:data', async (fn) => {
     let channel = socket.channelId || 0;
     fn(await getPoll(channel));
-    console.log("poll:data",channel);
+    // console.log("poll:data",channel);
   })
 
   socket.on('config', async () => {
@@ -51,7 +51,7 @@ io.on('connection', async (socket) => {
   })
 
   socket.on("disconnect", () => {
-    console.log("left", socket.id);
+    // console.log("left", socket.id);
   });
 });
 
@@ -61,11 +61,11 @@ app.post('/:channel/refresh', async (req, res) => {
   }
   if (req.body.action == 'clearVotes') {
     io.to(parseInt(req.params.channel)).emit('poll:clear');
-    console.log("poll:refresh:clearVotes", parseInt(req.params.channel));
+    // console.log("poll:refresh:clearVotes", parseInt(req.params.channel));
   }
   io.to(parseInt(req.params.channel)).emit('poll:refresh');
   res.send('OK');
-  console.log("poll:refresh", parseInt(req.params.channel));
+  // console.log("poll:refresh", parseInt(req.params.channel));
 });
 
 
@@ -83,7 +83,7 @@ app.post('/toggle/:key/:channel', async (req, res) => {
     io.to(channel).emit('config:data', clientConfig);
   }
   res.send('OK');
-  console.log("toggle:key:channel", req.params.key, channel);
+  // console.log("toggle:key:channel", req.params.key, channel);
 });
 
 async function vote(channel, value) {
